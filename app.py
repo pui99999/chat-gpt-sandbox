@@ -1,9 +1,15 @@
 import os
 import openai
+import ssl
 from flask import Flask, request, abort
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
+
+ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+ssl_context.load_cert_chain(certfile='/etc/letsencrypt/live/' + os.environ["DOMAIN"] + '/fullchain.pem',
+                            keyfile='/etc/letsencrypt/live/' + os.environ["DOMAIN"] + '/privkey.pem')
+
 
 app = Flask(__name__)
 
@@ -49,4 +55,4 @@ def handle_message(event):
 
 
 if __name__ == "__main__":
-    app.run()
+    app.run(host="0.0.0.0", port=5000, ssl_context=ssl_context)

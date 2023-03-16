@@ -1,10 +1,13 @@
 import os
 import openai
 import ssl
-from flask import Flask, request, abort
+from flask import Flask, request, abort, jsonify
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
 
 ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
 ssl_context.load_cert_chain(certfile='/etc/letsencrypt/live/' + os.environ["DOMAIN"] + '/fullchain.pem',
@@ -18,9 +21,13 @@ line_bot_api = LineBotApi(os.environ["LINE_CHANNEL_ACCESS_TOKEN"])
 handler = WebhookHandler(os.environ["LINE_CHANNEL_SECRET"])
 openai.api_key = os.environ["OPENAI_API_KEY"]
 
+logging.debug(f"start...")
+
 
 @app.route("/callback", methods=["POST"])
 def callback():
+    logging.debug(f"Received request: {request.json}")
+
     signature = request.headers["X-Line-Signature"]
     body = request.get_data(as_text=True)
 
@@ -34,6 +41,8 @@ def callback():
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
+    logging.debug(f"handle_message: {event}")
+
     user_message = event.message.text
 
     # ChatGPT に問い合わせる
